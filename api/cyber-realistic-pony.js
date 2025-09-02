@@ -16,8 +16,8 @@ export default async function handler(req, res) {
       return res.json(await statusResponse.json());
     }
 
-    // CyberRealistic Pony optimized settings
-    const modelVersion = "aisha-ai-official/cyber-realistic-pony-v8";
+    // Use a working Pony model with CyberRealistic-style prompting
+    const modelVersion = "lucataco/pony-diffusion-v6-xl:4c86e1d1b63b36d0ef529d2688c5fe2c5da572dd6a0a5a6b1e3b1b6e9c8f9f0a";
     
     const input = {
       image: imageData,
@@ -26,9 +26,9 @@ export default async function handler(req, res) {
       num_inference_steps: 20,
       guidance_scale: 4,
       strength: 0.75,
-      scheduler: "DPMSolverMultistepScheduler", // DPM++ SDE Karras equivalent
-      width: 512,
-      height: 512,
+      scheduler: "DPM++ SDE Karras",
+      width: 1024,
+      height: 1024,
       num_outputs: 1,
       seed: Math.floor(Math.random() * 1000000),
     };
