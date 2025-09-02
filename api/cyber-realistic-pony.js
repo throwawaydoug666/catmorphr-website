@@ -1,3 +1,4 @@
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
       return res.json(await statusResponse.json());
     }
 
-    // Using lucataco/pony-diffusion-v6-xl - a reliable Pony model
+    // Using charlesmccarthy/pony-sdxl - a reliable Pony SDXL model on Replicate
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: "lucataco/pony-diffusion-v6-xl",
+        version: "charlesmccarthy/pony-sdxl",
         input: {
           image: imageData,
           prompt: prompt,
@@ -32,14 +33,10 @@ export default async function handler(req, res) {
           num_inference_steps: 20,
           guidance_scale: 4,
           strength: 0.75,
-          scheduler: "DPMSolverMultistep",
           width: 1024,
           height: 1024,
           num_outputs: 1,
-          seed: Math.floor(Math.random() * 1000000),
-          controlnet_conditioning_scale: useControlNet ? 1.0 : 0.0,
-          control_guidance_start: useControlNet ? 0.0 : 1.0,
-          control_guidance_end: useControlNet ? 1.0 : 0.0
+          seed: Math.floor(Math.random() * 1000000)
         }
       })
     });
