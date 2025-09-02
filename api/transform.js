@@ -7,31 +7,49 @@ export default async function handler(req, res) {
 
   try {
     if (predictionId) {
+      // Polling for existing prediction
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-        headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+        },
       });
       return res.json(await statusResponse.json());
     }
 
-    // Go back to the working model from v5.0
-    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    // CyberRealistic Pony optimized settings
+    const modelVersion = "aisha-ai-official/cyber-realistic-pony-v8";
     
     const input = {
-      init_image: imageData,
+      image: imageData,
       prompt: prompt,
-      negative_prompt: "low quality, blurry, anime, cartoon",
-      num_inference_steps: 25,
-      guidance_scale: 7.5,
-      prompt_strength: 0.75
+      negative_prompt: "score_6, score_5, score_4, source_pony, source_anime, source_furry, source_cartoon, worst quality, low quality, normal quality, lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
+      num_inference_steps: 20,
+      guidance_scale: 4,
+      strength: 0.75,
+      scheduler: "DPMSolverMultistepScheduler", // DPM++ SDE Karras equivalent
+      width: 512,
+      height: 512,
+      num_outputs: 1,
+      seed: Math.floor(Math.random() * 1000000),
     };
+
+    // Add ControlNet if requested
+    if (useControlNet) {
+      input.controlnet_conditioning_scale = 1.0;
+      input.control_guidance_start = 0.0;
+      input.control_guidance_end = 1.0;
+    }
 
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
         'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ version: modelVersion, input })
+      body: JSON.stringify({
+        version: modelVersion,
+        input: input
+      })
     });
 
     if (!response.ok) {
@@ -40,6 +58,7 @@ export default async function handler(req, res) {
     }
 
     return res.json(await response.json());
+    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
