@@ -504,7 +504,7 @@
                 logDebug(`Using ${controlNetType} with strength: ${strength}`);
                 logDebug('Calling transform endpoint...');
                 
-                const response = await fetch('/api/cyber-realistic-pony', {
+                const response = await fetch('/api/transform', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
