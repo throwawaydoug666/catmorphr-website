@@ -7,17 +7,14 @@ export default async function handler(req, res) {
 
   try {
     if (predictionId) {
-      // Polling for existing prediction
       const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
-        headers: {
-          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        },
+        headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
       });
       return res.json(await statusResponse.json());
     }
 
-    // Use your working model with Pony-style prompting
-    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f3dc683da926f365620b29355644f050bf95754f4df9bca7478";
+    // Use your working model with your preferred settings (20 steps, CFG 4) and Pony-style prompting
+    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
     
     const input = {
       init_image: imageData,
@@ -32,12 +29,9 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        version: modelVersion,
-        input: input
-      })
+      body: JSON.stringify({ version: modelVersion, input })
     });
 
     if (!response.ok) {
