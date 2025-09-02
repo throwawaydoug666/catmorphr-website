@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt, predictionId, useControlNet = false } = req.body;
+  const { imageData, prompt, predictionId, useControlNet = true, controlNetType = 'openpose', strength = 0.4 } = req.body;
 
   try {
     if (predictionId) {
@@ -13,17 +13,43 @@ export default async function handler(req, res) {
       return res.json(await statusResponse.json());
     }
 
-    // Use your working model with your preferred settings (20 steps, CFG 4) and Pony-style prompting
-    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    // Choose the appropriate ControlNet model based on type - using actual working Replicate models
+    let modelVersion;
+    if (useControlNet) {
+      switch (controlNetType) {
+        case 'openpose':
+          modelVersion = "jagilley/controlnet-pose";
+          break;
+        case 'canny':
+          modelVersion = "jagilley/controlnet-canny";
+          break;
+        case 'depth':
+          modelVersion = "jagilley/controlnet-depth2img";
+          break;
+        default:
+          modelVersion = "jagilley/controlnet-pose";
+      }
+    } else {
+      // Fallback to regular stable diffusion if ControlNet is disabled
+      modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    }
     
     const input = {
-      init_image: imageData,
       prompt: prompt,
       negative_prompt: "(blurry:1.4), (out of focus:1.3), (soft focus:1.3), (low resolution:1.2), (pixelated:1.2), (low quality:1.3), (worst quality:1.4), (bad quality:1.2), (jpeg artifacts:1.2), (compression artifacts:1.2), (grainy:1.1), (noise:1.1), score_6, score_5, score_4, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
       num_inference_steps: 30,
       guidance_scale: 4,
-      prompt_strength: 0.75
+      strength: parseFloat(strength)
     };
+
+    // Use different parameter names based on model type
+    if (useControlNet) {
+      input.image = imageData;
+    } else {
+      input.init_image = imageData;
+      input.prompt_strength = parseFloat(strength);
+      delete input.strength;
+    }
 
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
