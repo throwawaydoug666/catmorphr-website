@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatMorphr v5.0 - Working Backend</title>
+    <title>CatMorphr v6.0 - ControlNet Edition</title>
     <style>
         * {
             margin: 0;
@@ -73,6 +73,38 @@
             font-family: monospace;
             font-size: 14px;
             color: #166534;
+        }
+
+        .controls-section {
+            background: rgba(78, 205, 196, 0.1);
+            border: 2px solid #4ecdc4;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            margin: 15px 0;
+        }
+
+        .control-group label {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .control-group input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-left: 30px;
+            margin-top: 5px;
         }
 
         .upload-area {
@@ -235,17 +267,35 @@
 </head>
 <body>
     <div class="container">
-        <h1>CatMorphr v5.0 - Now Working!</h1>
-        <p class="subtitle">Transform anyone into a realistic cat character!</p>
+        <h1>CatMorphr v6.0 - ControlNet Edition</h1>
+        <p class="subtitle">Transform anyone into a realistic cat character with pose preservation!</p>
 
-        <div class="debug" id="debugOutput">Debug: v5.0 loaded with working backend</div>
+        <div class="debug" id="debugOutput">Debug: v6.0 loaded with ControlNet support</div>
 
         <div class="status-box">
-            <strong>✅ Backend API Ready!</strong><br>
-            Endpoint: /api/transform<br>
-            Model: Stability AI img2img<br>
+            <strong>✅ ControlNet API Ready!</strong><br>
+            Model: ControlNet Pose + Fallback SD<br>
+            Features: Pose preservation, realistic transformations<br>
             Security: Environment variables configured<br>
-            Status: Ready to transform!
+            Status: Ready to transform with pose control!
+        </div>
+
+        <div class="controls-section">
+            <h3 style="color: #333; margin-bottom: 15px;">Transform Settings</h3>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="useControlNet" checked>
+                    Use ControlNet Pose Preservation
+                </label>
+                <div class="help-text">Maintains the exact pose and body positioning from your input image</div>
+            </div>
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="highQuality" checked>
+                    High Quality Mode (slower but better results)
+                </label>
+                <div class="help-text">Uses more inference steps for better image quality</div>
+            </div>
         </div>
 
         <div class="upload-area" id="uploadArea">
@@ -268,7 +318,7 @@
                     <img id="transformedImage" alt="Transformed" style="display: none;">
                     <div class="loading" id="loadingIndicator">
                         <div class="loading-spinner"></div>
-                        <p>Creating your cat transformation... This takes 60-120 seconds</p>
+                        <p>Creating your cat transformation with pose preservation... This takes 60-120 seconds</p>
                     </div>
                     <button class="download-btn" id="downloadBtn">Download Cat Image 📥</button>
                 </div>
@@ -309,7 +359,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            logDebug('v5.0 DOM loaded, setting up handlers');
+            logDebug('v6.0 DOM loaded with ControlNet, setting up handlers');
             
             const fileInput = document.getElementById('fileInput');
             const uploadArea = document.getElementById('uploadArea');
@@ -332,160 +382,4 @@
 
             transformBtn.addEventListener('click', startTransformation);
 
-            downloadBtn.addEventListener('click', function() {
-                if (resultImageUrl) {
-                    const a = document.createElement('a');
-                    a.href = resultImageUrl;
-                    a.download = 'catmorphr-transformation.png';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            });
-
-            logDebug('v5.0 handlers set up successfully');
-        });
-
-        function processImageFile(file) {
-            logDebug('Processing: ' + file.name);
-            
-            if (!file.type.startsWith('image/')) {
-                showError('Please select a valid image file.');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                userImageData = e.target.result;
-                
-                const originalImg = document.getElementById('originalImage');
-                const previewContainer = document.getElementById('previewContainer');
-                const transformBtn = document.getElementById('transformBtn');
-                
-                if (originalImg) originalImg.src = userImageData;
-                if (previewContainer) previewContainer.style.display = 'block';
-                if (transformBtn) transformBtn.style.display = 'block';
-                
-                hideError();
-                logDebug('Image loaded successfully');
-            };
-            
-            reader.onerror = function() {
-                showError('Failed to read the file.');
-            };
-            
-            reader.readAsDataURL(file);
-        }
-
-        async function startTransformation() {
-            logDebug('Starting transformation via secure API...');
-            
-            if (!userImageData) {
-                showError('Please upload an image first.');
-                return;
-            }
-
-            const loading = document.getElementById('loadingIndicator');
-            const resultImg = document.getElementById('transformedImage');
-            const transformBtn = document.getElementById('transformBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            if (loading) loading.style.display = 'block';
-            if (resultImg) resultImg.style.display = 'none';
-            if (transformBtn) transformBtn.disabled = true;
-            if (downloadBtn) downloadBtn.style.display = 'none';
-            hideError();
-
-            try {
-                const mainPrompt = "modern photo of a cat girl, super realistic, whiskers, high quality, fur, highly detailed";
-                
-                logDebug('Calling /api/transform endpoint...');
-                
-                const response = await fetch('/api/transform', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        imageData: userImageData,
-                        prompt: mainPrompt
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `API call failed with status ${response.status}`);
-                }
-
-                const prediction = await response.json();
-                logDebug('Prediction created: ' + prediction.id);
-
-                // Poll for completion
-                let pollCount = 0;
-                const maxPolls = 60; // 5 minutes max
-                
-                while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && pollCount < maxPolls) {
-                    logDebug(`Polling ${pollCount + 1}/${maxPolls}. Status: ${prediction.status}`);
-                    
-                    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-                    
-                    const pollResponse = await fetch('/api/transform', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            predictionId: prediction.id
-                        })
-                    });
-                    
-                    if (!pollResponse.ok) {
-                        throw new Error('Polling failed');
-                    }
-                    
-                    const updatedPrediction = await pollResponse.json();
-                    Object.assign(prediction, updatedPrediction);
-                    pollCount++;
-                }
-
-                if (prediction.status === 'failed') {
-                    throw new Error('Generation failed: ' + (prediction.error || 'Unknown error'));
-                }
-
-                if (prediction.status !== 'succeeded') {
-                    throw new Error('Generation timed out after 5 minutes');
-                }
-
-                const imageUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
-                
-                if (!imageUrl) {
-                    throw new Error('No image generated');
-                }
-
-                // Load the result image
-                const imageResponse = await fetch(imageUrl);
-                const imageBlob = await imageResponse.blob();
-                resultImageUrl = URL.createObjectURL(imageBlob);
-                
-                if (resultImg) {
-                    resultImg.src = resultImageUrl;
-                    resultImg.style.display = 'block';
-                }
-                
-                if (downloadBtn) {
-                    downloadBtn.style.display = 'inline-block';
-                }
-                
-                logDebug('SUCCESS! Cat transformation complete!');
-                
-            } catch (error) {
-                logDebug('Transformation failed: ' + error.message);
-                showError('Transformation failed: ' + error.message);
-            } finally {
-                if (loading) loading.style.display = 'none';
-                if (transformBtn) transformBtn.disabled = false;
-            }
-        }
-    </script>
-</body>
-</html>
+            downloadBtn.addEventListener('click', func
