@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt, predictionId, useControlNet = true, controlNetType = 'pose' } = req.body;
+  const { imageData, prompt, predictionId, useControlNet = false } = req.body;
 
   try {
     if (predictionId) {
@@ -13,18 +13,15 @@ export default async function handler(req, res) {
       return res.json(await statusResponse.json());
     }
 
-    // Use the working ControlNet model we know exists
-    const modelVersion = useControlNet 
-      ? "jagilley/controlnet-pose:0a82aaa2e94e19a325869fcf47af8e51b1d0c4d7c6d2b3a8ed44f7f16fcb6b34"
-      : "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
-
-    const input = useControlNet ? {
-      image: imageData,
-      prompt: prompt,
-      structure: controlNetType  // Keep this simple
-    } : {
+    // Go back to the working model from v5.0
+    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    
+    const input = {
       init_image: imageData,
       prompt: prompt,
+      negative_prompt: "low quality, blurry, anime, cartoon",
+      num_inference_steps: 25,
+      guidance_scale: 7.5,
       prompt_strength: 0.75
     };
 
@@ -36,6 +33,11 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({ version: modelVersion, input })
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      return res.status(response.status).json({ error });
+    }
 
     return res.json(await response.json());
   } catch (error) {
