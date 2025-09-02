@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt, predictionId } = req.body;
+  const { imageData, prompt, predictionId, useControlNet = true } = req.body;
 
   try {
     // If predictionId provided, check status of existing prediction
@@ -18,7 +18,29 @@ export default async function handler(req, res) {
       return res.json(prediction);
     }
 
-    // Otherwise create new prediction
+    // Choose model based on ControlNet preference
+    const modelVersion = useControlNet 
+      ? "jagilley/controlnet-pose:0a82aaa2e94e19a325869fcf47af8e51b1d0c4d7c6d2b3a8ed44f7f16fcb6b34"
+      : "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+
+    // Different input structure for ControlNet vs regular SD
+    const input = useControlNet ? {
+      image: imageData,
+      prompt: prompt,
+      negative_prompt: "low quality, blurry, anime, cartoon, distorted",
+      num_inference_steps: 25,
+      guidance_scale: 7.5,
+      controlnet_conditioning_scale: 1.0,
+      structure: "pose"  // Use pose detection
+    } : {
+      init_image: imageData,
+      prompt: prompt,
+      negative_prompt: "low quality, blurry, anime, cartoon",
+      num_inference_steps: 25,
+      guidance_scale: 7.5,
+      prompt_strength: 0.75
+    };
+
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -26,15 +48,8 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478",
-        input: {
-          init_image: imageData,
-          prompt: prompt,
-          negative_prompt: "low quality, blurry, anime, cartoon",
-          num_inference_steps: 25,
-          guidance_scale: 7.5,
-          prompt_strength: 0.75
-        }
+        version: modelVersion,
+        input: input
       })
     });
 
