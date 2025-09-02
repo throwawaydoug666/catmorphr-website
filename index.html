@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatMorphr v7.0 </title>
+    <title>CatMorphr</title>
     <style>
         * {
             margin: 0;
@@ -286,56 +286,46 @@
 </head>
 <body>
     <div class="container">
-        <h1>CatMorphr v7.0 </h1>
-        <p class="subtitle">Transform anyone into a realistic cat! 🦄✨</p>
+        <h1>CatMorphr </h1>
+        <p class="subtitle">Transform anyone into a realistic cat character🦄✨</p>
 
-        <div class="debug" id="debugOutput">Debug: v7.0 loaded with  model support</div>
+        <div class="debug" id="debugOutput">Debug: v7.0</div>
 
         <div class="status-box">
-            <strong>🤖 Pony API Ready!</strong><br>
+            <strong>🤖 CyberRealistic Pony API Ready!</strong><br>
             Model: aisha-ai-official/cyber-realistic-pony-v8<br>
             Settings: DPM++ SDE Karras, 20 steps, CFG 4<br>
             Features: Photorealistic quality with anime aesthetics<br>
-            Status: Ready for cat transformations!
+            Status: Ready for cyber-enhanced cat transformations!
         </div>
 
         <div class="controls-section">
-            <h3 style="color: #333; margin-bottom: 15px;">Cat Transformation Settings</h3>
+            <h3 style="color: #333; margin-bottom: 15px;">Settings</h3>
 
             <div class="control-group">
                 <label style="display: block; margin-bottom: 10px; color: #333;">
-                    Transformation Strength: <span class="range-display" id="strengthDisplay">0.4</span>
+                    Transformation Amount: <span class="range-display" id="strengthDisplay">0.4</span>
                 </label>
                 <input type="range" id="strength" min="0.15" max="0.75" value="0.4" step="0.05">
-                <div class="help-text">How much to transform the original image (0.15-0.75 range, 0.4 recommended)</div>
+                <div class="help-text">How much to change the original photo</div>
             </div>
             
             <div class="control-group">
                 <label>
                     <input type="checkbox" id="useControlNet" checked>
-                    Enable ControlNet Structure Control
+                    Preserve pose and structure
                 </label>
-                <div class="help-text">Preserves structure and composition from your input image</div>
+                <div class="help-text">Keeps the person's pose while adding cat features</div>
             </div>
 
             <div class="control-group" id="controlNetOptions">
-                <label style="display: block; margin-bottom: 10px; color: #333;">ControlNet Type:</label>
+                <label style="display: block; margin-bottom: 10px; color: #333;">Pose Detection:</label>
                 <select id="controlNetType" style="width: 100%; padding: 8px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px;">
-                    <option value="openpose">OpenPose - Preserves human pose and body positioning</option>
-                    <option value="canny">Canny - Follows edge detection and outlines</option>
-                    <option value="depth">Depth - Maintains 3D structure and depth relationships</option>
+                    <option value="openpose">Body Pose - Best for people photos</option>
+                    <option value="canny">Edges - Good for clear outlines</option>
+                    <option value="depth">Depth - Maintains 3D shape</option>
                 </select>
-                <div class="help-text">Choose how the AI analyzes and preserves your input image structure</div>
-            </div>
-
-            <div style="background: rgba(147,51,234,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
-                <h4 style="color: #333; margin-bottom: 10px;">🔧 Optimized Settings</h4>
-                <p style="color: #666; font-size: 14px; margin: 0;">
-                    <strong>Sampler:</strong> DPM++ SDE Karras<br>
-                    <strong>Steps:</strong> 30 (optimized for quality)<br>
-                    <strong>CFG Scale:</strong> 4 (perfect for stable diffusion)<br>
-                    <strong>ControlNet:</strong> Multi-type support (Pose/Canny/Depth)
-                </p>
+                <div class="help-text">Choose how to preserve the original photo's structure</div>
             </div>
         </div>
 
@@ -355,19 +345,19 @@
                     <img id="originalImage" alt="Original">
                 </div>
                 <div class="image-box">
-                    <h3>CyberRealistic Cat Transformation 🤖🐱</h3>
+                    <h3>Your Cat Transformation</h3>
                     <img id="transformedImage" alt="Transformed" style="display: none;">
                     <div class="loading" id="loadingIndicator">
                         <div class="loading-spinner"></div>
-                        <p>Creating your CyberRealistic cat transformation... This takes 15-30 seconds</p>
+                        <p>Creating your cat transformation... This takes about 30-60 seconds</p>
                     </div>
-                    <button class="download-btn" id="downloadBtn">Download Cat Image 📥</button>
+                    <button class="download-btn" id="downloadBtn">Download Cat Image</button>
                 </div>
             </div>
         </div>
 
         <button class="transform-btn" id="transformBtn" style="display: none;">
-            Transform to Cat! 🤖✨
+            Transform to Cat!
         </button>
     </div>
 
@@ -405,7 +395,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            logDebug('v7.0 DOM loaded with CyberRealistic Pony, setting up handlers');
+            logDebug('App loaded, setting up handlers');
             
             const fileInput = document.getElementById('fileInput');
             const uploadArea = document.getElementById('uploadArea');
@@ -440,14 +430,14 @@
                 if (resultImageUrl) {
                     const a = document.createElement('a');
                     a.href = resultImageUrl;
-                    a.download = 'catmorphr-cyberrealistic-transformation.png';
+                    a.download = 'cat-transformation.png';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
                 }
             });
 
-            logDebug('v7.0 CyberRealistic Pony handlers set up successfully');
+            logDebug('Handlers set up successfully');
         });
 
         function processImageFile(file) {
@@ -486,7 +476,7 @@
         }
 
         async function startTransformation() {
-            logDebug('Starting ControlNet cat transformation...');
+            logDebug('Starting cat transformation...');
             
             if (!userImageData) {
                 showError('Please upload an image first.');
@@ -511,8 +501,8 @@
                 
                 const prompt = generateCatTransformPrompt();
                 
-                logDebug(`Using ControlNet ${controlNetType.toUpperCase()} with Strength: ${strength}`);
-                logDebug('Calling /api/cyber-realistic-pony endpoint...');
+                logDebug(`Using ${controlNetType} with strength: ${strength}`);
+                logDebug('Calling transform endpoint...');
                 
                 const response = await fetch('/api/cyber-realistic-pony', {
                     method: 'POST',
@@ -592,7 +582,7 @@
                     downloadBtn.style.display = 'inline-block';
                 }
                 
-                logDebug('SUCCESS! CyberRealistic Pony cat transformation complete!');
+                logDebug('SUCCESS! Cat transformation complete!');
                 
             } catch (error) {
                 logDebug('Transformation failed: ' + error.message);
