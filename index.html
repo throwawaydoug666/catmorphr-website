@@ -268,7 +268,7 @@
 <body>
     <div class="container">
         <h1>CatMorphr v6.1 - Multi-ControlNet</h1>
-        <p class="subtitle">Turn into a cat! </p>
+        <p class="subtitle">Transform anyone into a realistic cat character with pose preservation!</p>
 
         <div class="debug" id="debugOutput">Debug: v6.1 loaded with Multi-ControlNet support (Pose/Depth/Canny)</div>
 
@@ -459,8 +459,7 @@
             hideError();
 
             try {
-                const mainPrompt = "cartoon portrait of a cat humanoid, human face with cat ears, subtle facial fur patches, cat-like nose, whiskers growing from cheeks, feline eyes with vertical pupils, human hiar, natural skin tone with soft fur markings, professional photography, detailed facial features, soft lighting
-";
+                const mainPrompt = "(cat Humanoid:3), Cat ears, cat whiskers, cat-like nose, whiskers growing from cheeks, feline eyes, soft lighting, realistic human with cat ears, realistic human with cat features";
                 const useControlNet = document.getElementById('useControlNet')?.checked ?? true;
                 const controlNetType = document.getElementById('controlNetType')?.value ?? 'pose';
                 const highQuality = document.getElementById('highQuality')?.checked ?? true;
