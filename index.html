@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatMorphr v6.1 - Multi-ControlNet</title>
+    <title>CatMorphr v7.0 - Pony Model Edition</title>
     <style>
         * {
             margin: 0;
@@ -65,14 +65,14 @@
         }
 
         .status-box {
-            background: rgba(34,197,94,0.1);
-            border: 2px solid #22c55e;
+            background: rgba(147,51,234,0.1);
+            border: 2px solid #9333ea;
             border-radius: 15px;
             padding: 20px;
             margin: 20px 0;
             font-family: monospace;
             font-size: 14px;
-            color: #166534;
+            color: #581c87;
         }
 
         .controls-section {
@@ -100,11 +100,30 @@
             transform: scale(1.2);
         }
 
+        .control-group select, .control-group input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #4ecdc4;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
         .help-text {
             font-size: 12px;
             color: #666;
             margin-left: 30px;
             margin-top: 5px;
+        }
+
+        .range-display {
+            display: inline-block;
+            background: #9333ea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
         }
 
         .upload-area {
@@ -200,7 +219,7 @@
 
         .loading-spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #4ecdc4;
+            border-top: 4px solid #9333ea;
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -267,46 +286,56 @@
 </head>
 <body>
     <div class="container">
-        <h1>CatMorphr v6.1 - Multi-ControlNet</h1>
-        <p class="subtitle">Transform anyone into a realistic cat character with pose preservation!</p>
+        <h1>CatMorphr v7.0 - CyberRealistic Pony</h1>
+        <p class="subtitle">Transform anyone into a realistic cat character using CyberRealistic Pony! 🦄✨</p>
 
-        <div class="debug" id="debugOutput">Debug: v6.1 loaded with Multi-ControlNet support (Pose/Depth/Canny)</div>
+        <div class="debug" id="debugOutput">Debug: v7.0 loaded with CyberRealistic Pony model support</div>
 
         <div class="status-box">
-            <strong>✅ Multi-ControlNet API Ready!</strong><br>
-            Models: OpenPose, Depth, Canny Edge Detection<br>
-            Features: Advanced pose preservation, structure control<br>
-            Security: Environment variables configured<br>
-            Status: Ready for advanced transformations!
+            <strong>🤖 CyberRealistic Pony API Ready!</strong><br>
+            Model: aisha-ai-official/cyber-realistic-pony-v8<br>
+            Settings: DPM++ SDE Karras, 20 steps, CFG 4<br>
+            Features: Photorealistic quality with anime aesthetics<br>
+            Status: Ready for cyber-enhanced cat transformations!
         </div>
 
         <div class="controls-section">
-            <h3 style="color: #333; margin-bottom: 15px;">Transform Settings</h3>
+            <h3 style="color: #333; margin-bottom: 15px;">CyberRealistic Pony Settings</h3>
             
             <div class="control-group">
-                <label>
-                    <input type="checkbox" id="useControlNet" checked>
-                    Enable ControlNet Structure Control
-                </label>
-                <div class="help-text">Uses AI to preserve structure and composition from your input image</div>
+                <label style="display: block; margin-bottom: 10px; color: #333;">Cat Style:</label>
+                <select id="artStyle" style="width: 100%; padding: 8px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px;">
+                    <option value="realistic">Photorealistic Cat Girl</option>
+                    <option value="anime">Anime Cat Character</option>
+                    <option value="furry">Anthropomorphic Cat</option>
+                    <option value="cyberrealistic">CyberRealistic Style</option>
+                </select>
+                <div class="help-text">Choose the artistic style for your cat transformation</div>
             </div>
 
             <div class="control-group">
-                <label style="display: block; margin-bottom: 10px; color: #333;">ControlNet Type:</label>
-                <select id="controlNetType" style="width: 100%; padding: 8px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px;">
-                    <option value="pose">OpenPose - Preserves human pose and body positioning</option>
-                    <option value="depth">Depth - Maintains 3D structure and depth relationships</option>
-                    <option value="canny">Canny - Follows edge detection and outlines</option>
-                </select>
-                <div class="help-text">Choose how the AI should analyze and preserve your input image structure</div>
+                <label style="display: block; margin-bottom: 10px; color: #333;">
+                    Transformation Strength: <span class="range-display" id="strengthDisplay">0.75</span>
+                </label>
+                <input type="range" id="strength" min="0.5" max="0.9" value="0.75" step="0.05">
+                <div class="help-text">How much to transform the original image (0.7-0.8 recommended)</div>
             </div>
             
             <div class="control-group">
                 <label>
-                    <input type="checkbox" id="highQuality" checked>
-                    High Quality Mode (slower but better results)
+                    <input type="checkbox" id="useControlNet">
+                    Enable ControlNet (Pose Preservation)
                 </label>
-                <div class="help-text">Uses more inference steps for better image quality</div>
+                <div class="help-text">Preserves the pose and composition from your input image</div>
+            </div>
+
+            <div style="background: rgba(147,51,234,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
+                <h4 style="color: #333; margin-bottom: 10px;">🔧 Optimized Settings</h4>
+                <p style="color: #666; font-size: 14px; margin: 0;">
+                    <strong>Sampler:</strong> DPM++ SDE Karras<br>
+                    <strong>Steps:</strong> 20 (optimized for speed + quality)<br>
+                    <strong>CFG Scale:</strong> 4 (perfect for CyberRealistic Pony)
+                </p>
             </div>
         </div>
 
@@ -326,11 +355,11 @@
                     <img id="originalImage" alt="Original">
                 </div>
                 <div class="image-box">
-                    <h3>Cat Transformation 🐱</h3>
+                    <h3>CyberRealistic Cat Transformation 🤖🐱</h3>
                     <img id="transformedImage" alt="Transformed" style="display: none;">
                     <div class="loading" id="loadingIndicator">
                         <div class="loading-spinner"></div>
-                        <p>Creating your cat transformation with pose preservation... This takes 60-120 seconds</p>
+                        <p>Creating your CyberRealistic cat transformation... This takes 15-30 seconds</p>
                     </div>
                     <button class="download-btn" id="downloadBtn">Download Cat Image 📥</button>
                 </div>
@@ -338,7 +367,7 @@
         </div>
 
         <button class="transform-btn" id="transformBtn" style="display: none;">
-            Transform to Cat! 🐾
+            Transform to Cat! 🤖✨
         </button>
     </div>
 
@@ -370,8 +399,13 @@
             }
         }
 
+        function updateRangeDisplays() {
+            const strength = document.getElementById('strength');
+            document.getElementById('strengthDisplay').textContent = strength.value;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            logDebug('v6.1 DOM loaded with Multi-ControlNet, setting up handlers');
+            logDebug('v7.0 DOM loaded with CyberRealistic Pony, setting up handlers');
             
             const fileInput = document.getElementById('fileInput');
             const uploadArea = document.getElementById('uploadArea');
@@ -382,6 +416,14 @@
                 logDebug('ERROR: Missing elements');
                 return;
             }
+
+            // Set up range slider listeners
+            const strengthSlider = document.getElementById('strength');
+            if (strengthSlider) {
+                strengthSlider.addEventListener('input', updateRangeDisplays);
+            }
+
+            updateRangeDisplays();
 
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -398,14 +440,14 @@
                 if (resultImageUrl) {
                     const a = document.createElement('a');
                     a.href = resultImageUrl;
-                    a.download = 'catmorphr-controlnet-transformation.png';
+                    a.download = 'catmorphr-cyberrealistic-transformation.png';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
                 }
             });
 
-            logDebug('v6.1 Multi-ControlNet handlers set up successfully');
+            logDebug('v7.0 CyberRealistic Pony handlers set up successfully');
         });
 
         function processImageFile(file) {
@@ -439,8 +481,19 @@
             reader.readAsDataURL(file);
         }
 
+        function generateCyberRealisticPrompt(artStyle) {
+            const basePrompts = {
+                realistic: "score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic eyes, high quality photography",
+                anime: "score_9, score_8_up, score_7_up, anime style, cute cat girl, neko, cat ears, whiskers, anime eyes, soft lighting, detailed",
+                furry: "score_9, score_8_up, score_7_up, anthropomorphic cat character, detailed fur, feline anthro, expressive eyes, high quality",
+                cyberrealistic: "score_9, score_8_up, score_7_up, cyberrealistic style, cat girl, detailed textures, dramatic lighting, photorealistic with stylized elements"
+            };
+            
+            return basePrompts[artStyle] || basePrompts.realistic;
+        }
+
         async function startTransformation() {
-            logDebug('Starting Multi-ControlNet transformation...');
+            logDebug('Starting CyberRealistic Pony transformation...');
             
             if (!userImageData) {
                 showError('Please upload an image first.');
@@ -459,25 +512,24 @@
             hideError();
 
             try {
-                const mainPrompt = "(cat Humanoid:3), Cat ears, cat whiskers, cat-like nose, whiskers growing from cheeks, feline eyes, soft lighting, realistic human with cat ears, realistic human with cat features";
-                const useControlNet = document.getElementById('useControlNet')?.checked ?? true;
-                const controlNetType = document.getElementById('controlNetType')?.value ?? 'pose';
-                const highQuality = document.getElementById('highQuality')?.checked ?? true;
+                const artStyle = document.getElementById('artStyle')?.value || 'realistic';
+                const strength = parseFloat(document.getElementById('strength')?.value || '0.75');
+                const useControlNet = document.getElementById('useControlNet')?.checked ?? false;
                 
-                logDebug(`Using ${useControlNet ? `ControlNet ${controlNetType.toUpperCase()}` : 'regular img2img'}`);
-                logDebug('Calling /api/transform endpoint...');
+                const prompt = generateCyberRealisticPrompt(artStyle);
                 
-                const response = await fetch('/api/transform', {
+                logDebug(`Using CyberRealistic Pony with ${artStyle} style, Strength: ${strength}`);
+                logDebug('Calling /api/cyber-realistic-pony endpoint...');
+                
+                const response = await fetch('/api/cyber-realistic-pony', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         imageData: userImageData,
-                        prompt: mainPrompt,
-                        useControlNet: useControlNet,
-                        controlNetType: controlNetType,
-                        highQuality: highQuality
+                        prompt: prompt,
+                        useControlNet: useControlNet
                     })
                 });
 
@@ -487,18 +539,18 @@
                 }
 
                 const prediction = await response.json();
-                logDebug('Prediction created: ' + prediction.id);
+                logDebug('CyberRealistic Pony prediction created: ' + prediction.id);
 
                 // Poll for completion
                 let pollCount = 0;
-                const maxPolls = 60; // 5 minutes max
+                const maxPolls = 30; // 2.5 minutes max (faster than regular Pony)
                 
                 while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && pollCount < maxPolls) {
                     logDebug(`Polling ${pollCount + 1}/${maxPolls}. Status: ${prediction.status}`);
                     
                     await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
                     
-                    const pollResponse = await fetch('/api/transform', {
+                    const pollResponse = await fetch('/api/cyber-realistic-pony', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -522,7 +574,7 @@
                 }
 
                 if (prediction.status !== 'succeeded') {
-                    throw new Error('Generation timed out after 5 minutes');
+                    throw new Error('Generation timed out after 2.5 minutes');
                 }
 
                 const imageUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
@@ -545,7 +597,7 @@
                     downloadBtn.style.display = 'inline-block';
                 }
                 
-                logDebug('SUCCESS! ControlNet cat transformation complete!');
+                logDebug('SUCCESS! CyberRealistic Pony cat transformation complete!');
                 
             } catch (error) {
                 logDebug('Transformation failed: ' + error.message);
