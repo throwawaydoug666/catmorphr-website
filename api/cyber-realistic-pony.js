@@ -13,9 +13,26 @@ export default async function handler(req, res) {
       return res.json(await statusResponse.json());
     }
 
-    // For now, use your working stable diffusion model for all transformations
-    // The controlNetType selection will be ready for when we get proper ControlNet access
-    const modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    // Using actual version hashes for ControlNet models
+    let modelVersion;
+    if (useControlNet) {
+      switch (controlNetType) {
+        case 'openpose':
+          modelVersion = "jagilley/controlnet-pose:0304f7f774ba7341ef754231f794b1ba3d129e3c46af3022241325ae0c50fb99";
+          break;
+        case 'canny':
+          modelVersion = "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613";
+          break;
+        case 'depth':
+          modelVersion = "jagilley/controlnet-depth2img:latest"; // Need exact hash
+          break;
+        default:
+          modelVersion = "jagilley/controlnet-pose:0304f7f774ba7341ef754231f794b1ba3d129e3c46af3022241325ae0c50fb99";
+      }
+    } else {
+      // Fallback to your working model
+      modelVersion = "stability-ai/stable-diffusion:27b93a2413e7f36cd83da926f3656280b2931564ff050bf9575f1fdf9bcd7478";
+    }
     
     const input = {
       init_image: imageData,
