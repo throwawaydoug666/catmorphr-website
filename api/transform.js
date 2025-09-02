@@ -3,9 +3,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt } = req.body;
+  const { imageData, prompt, predictionId } = req.body;
 
   try {
+    // If predictionId provided, check status of existing prediction
+    if (predictionId) {
+      const statusResponse = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+        },
+      });
+      
+      const prediction = await statusResponse.json();
+      return res.json(prediction);
+    }
+
+    // Otherwise create new prediction
     const response = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
