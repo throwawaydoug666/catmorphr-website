@@ -300,18 +300,7 @@
         </div>
 
         <div class="controls-section">
-            <h3 style="color: #333; margin-bottom: 15px;">CyberRealistic Pony Settings</h3>
-            
-            <div class="control-group">
-                <label style="display: block; margin-bottom: 10px; color: #333;">Cat Style:</label>
-                <select id="artStyle" style="width: 100%; padding: 8px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px;">
-                    <option value="realistic">Photorealistic Cat Girl</option>
-                    <option value="anime">Anime Cat Character</option>
-                    <option value="furry">Anthropomorphic Cat</option>
-                    <option value="cyberrealistic">CyberRealistic Style</option>
-                </select>
-                <div class="help-text">Choose the artistic style for your cat transformation</div>
-            </div>
+            <h3 style="color: #333; margin-bottom: 15px;">Cat Transformation Settings</h3>
 
             <div class="control-group">
                 <label style="display: block; margin-bottom: 10px; color: #333;">
@@ -324,9 +313,19 @@
             <div class="control-group">
                 <label>
                     <input type="checkbox" id="useControlNet" checked>
-                    Enable ControlNet (Pose Preservation)
+                    Enable ControlNet Structure Control
                 </label>
-                <div class="help-text">Preserves the pose and composition from your input image</div>
+                <div class="help-text">Preserves structure and composition from your input image</div>
+            </div>
+
+            <div class="control-group" id="controlNetOptions">
+                <label style="display: block; margin-bottom: 10px; color: #333;">ControlNet Type:</label>
+                <select id="controlNetType" style="width: 100%; padding: 8px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px;">
+                    <option value="openpose">OpenPose - Preserves human pose and body positioning</option>
+                    <option value="canny">Canny - Follows edge detection and outlines</option>
+                    <option value="depth">Depth - Maintains 3D structure and depth relationships</option>
+                </select>
+                <div class="help-text">Choose how the AI analyzes and preserves your input image structure</div>
             </div>
 
             <div style="background: rgba(147,51,234,0.1); padding: 15px; border-radius: 10px; margin-top: 15px;">
@@ -334,7 +333,8 @@
                 <p style="color: #666; font-size: 14px; margin: 0;">
                     <strong>Sampler:</strong> DPM++ SDE Karras<br>
                     <strong>Steps:</strong> 30 (optimized for quality)<br>
-                    <strong>CFG Scale:</strong> 4 (perfect for CyberRealistic Pony)
+                    <strong>CFG Scale:</strong> 4 (perfect for stable diffusion)<br>
+                    <strong>ControlNet:</strong> Multi-type support (Pose/Canny/Depth)
                 </p>
             </div>
         </div>
@@ -481,19 +481,12 @@
             reader.readAsDataURL(file);
         }
 
-        function generateCyberRealisticPrompt(artStyle) {
-            const basePrompts = {
-                realistic: "score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic eyes, high quality photography",
-                anime: "score_9, score_8_up, score_7_up, anime style, cute cat girl, neko, cat ears, whiskers, anime eyes, soft lighting, detailed",
-                furry: "score_9, score_8_up, score_7_up, anthropomorphic cat character, detailed fur, feline anthro, expressive eyes, high quality",
-                cyberrealistic: "score_9, score_8_up, score_7_up, cyberrealistic style, cat girl, detailed textures, dramatic lighting, photorealistic with stylized elements"
-            };
-            
-            return basePrompts[artStyle] || basePrompts.realistic;
+        function generateCatTransformPrompt() {
+            return "score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic cat eyes, high quality photography, detailed, sharp focus";
         }
 
         async function startTransformation() {
-            logDebug('Starting CyberRealistic Pony transformation...');
+            logDebug('Starting ControlNet cat transformation...');
             
             if (!userImageData) {
                 showError('Please upload an image first.');
@@ -512,13 +505,13 @@
             hideError();
 
             try {
-                const artStyle = document.getElementById('artStyle')?.value || 'realistic';
-                const strength = parseFloat(document.getElementById('strength')?.value || '0.75');
-                const useControlNet = document.getElementById('useControlNet')?.checked ?? false;
+                const strength = parseFloat(document.getElementById('strength')?.value || '0.4');
+                const useControlNet = document.getElementById('useControlNet')?.checked ?? true;
+                const controlNetType = document.getElementById('controlNetType')?.value || 'openpose';
                 
-                const prompt = generateCyberRealisticPrompt(artStyle);
+                const prompt = generateCatTransformPrompt();
                 
-                logDebug(`Using CyberRealistic Pony with ${artStyle} style, Strength: ${strength}`);
+                logDebug(`Using ControlNet ${controlNetType.toUpperCase()} with Strength: ${strength}`);
                 logDebug('Calling /api/cyber-realistic-pony endpoint...');
                 
                 const response = await fetch('/api/cyber-realistic-pony', {
@@ -530,6 +523,7 @@
                         imageData: userImageData,
                         prompt: prompt,
                         useControlNet: useControlNet,
+                        controlNetType: controlNetType,
                         strength: strength
                     })
                 });
