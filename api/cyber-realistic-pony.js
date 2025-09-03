@@ -34,9 +34,9 @@ export default async function handler(req, res) {
       });
 
       if (!preprocessorResponse.ok) {
-        console.log('Debug - Preprocessor failed, falling back to regular SD');
-        // Fall back to regular stable diffusion if preprocessing fails
-        return handleRegularStableDiffusion(imageData, prompt, strength);
+        const preprocessorError = await preprocessorResponse.text();
+        console.log('Debug - Preprocessor API error:', preprocessorError);
+        return handleRegularStableDiffusion(imageData, prompt, strength, res);
       }
 
       const preprocessorPrediction = await preprocessorResponse.json();
@@ -60,7 +60,7 @@ export default async function handler(req, res) {
 
       if (preprocessorResult.status !== 'succeeded') {
         console.log('Debug - Preprocessing failed, falling back to regular SD');
-        return handleRegularStableDiffusion(imageData, prompt, strength);
+        return await handleRegularStableDiffusion(imageData, prompt, strength, res);
       }
 
       const controlImageUrl = Array.isArray(preprocessorResult.output) ? 
@@ -106,44 +106,45 @@ export default async function handler(req, res) {
       });
 
       if (!controlNetResponse.ok) {
-        console.log('Debug - ControlNet failed, falling back to regular SD');
-        return handleRegularStableDiffusion(imageData, prompt, strength);
+        const controlNetError = await controlNetResponse.text();
+        console.log('Debug - ControlNet API error:', controlNetError);
+        return await handleRegularStableDiffusion(imageData, prompt, strength, res);
       }
 
       return res.json(await controlNetResponse.json());
 
     } else {
       // Regular Stable Diffusion (ControlNet disabled)
-      return handleRegularStableDiffusion(imageData, prompt, strength);
+      return await handleRegularStableDiffusion(imageData, prompt, strength, res);
     }
 
   } catch (error) {
     console.log('Debug - Exception:', error.message);
     res.status(500).json({ error: error.message });
   }
+}
 
-  // Helper function for regular Stable Diffusion
-  async function handleRegularStableDiffusion(imageData, prompt, strength) {
-    const modelVersion = "stability-ai/stable-diffusion";
-    
-    const input = {
-      init_image: imageData,
-      prompt: prompt,
-      negative_prompt: "(blurry:1.4), (out of focus:1.3), (soft focus:1.3), (low resolution:1.2), (pixelated:1.2), (low quality:1.3), (worst quality:1.4), (bad quality:1.2), (jpeg artifacts:1.2), (compression artifacts:1.2), (grainy:1.1), (noise:1.1), score_6, score_5, score_4, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
-      num_inference_steps: 30,
-      guidance_scale: 4,
-      prompt_strength: parseFloat(strength)
-    };
+// Helper function for regular Stable Diffusion
+async function handleRegularStableDiffusion(imageData, prompt, strength, res) {
+  const modelVersion = "stability-ai/stable-diffusion";
+  
+  const input = {
+    init_image: imageData,
+    prompt: prompt,
+    negative_prompt: "(blurry:1.4), (out of focus:1.3), (soft focus:1.3), (low resolution:1.2), (pixelated:1.2), (low quality:1.3), (worst quality:1.4), (bad quality:1.2), (jpeg artifacts:1.2), (compression artifacts:1.2), (grainy:1.1), (noise:1.1), score_6, score_5, score_4, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
+    num_inference_steps: 30,
+    guidance_scale: 4,
+    prompt_strength: parseFloat(strength)
+  };
 
-    const response = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ version: modelVersion, input })
-    });
+  const response = await fetch('https://api.replicate.com/v1/predictions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ version: modelVersion, input })
+  });
 
-    return res.json(await response.json());
-  }
+  return res.json(await response.json());
 }
