@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt, predictionId, useControlNet = true, controlNetType = 'openpose', strength = 0.4 } = req.body;
+  const { imageData, prompt, predictionId, useControlNet = true, controlNetType = 'openpose', strength = 0.4, controlNetStrength = 0.8 } = req.body;
 
   try {
     if (predictionId) {
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
         negative_prompt: "(blurry:1.4), (out of focus:1.3), (soft focus:1.3), (low resolution:1.2), (pixelated:1.2), (low quality:1.3), (worst quality:1.4), (bad quality:1.2), (jpeg artifacts:1.2), (compression artifacts:1.2), (grainy:1.1), (noise:1.1), score_6, score_5, score_4, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
         num_inference_steps: 30,
         guidance_scale: 4,
-        strength: parseFloat(strength)
+        strength: parseFloat(controlNetStrength) // Use ControlNet strength for structure control
       };
 
       console.log('Debug - Starting ControlNet generation with model:', modelVersion);
