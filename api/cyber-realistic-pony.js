@@ -14,7 +14,32 @@ export default async function handler(req, res) {
     }
 
     if (useControlNet) {
+      console.log('Debug - ControlNet requested but preprocessing step disabled for debugging');
+      console.log('Debug - Falling back to regular Stable Diffusion');
+      return await handleRegularStableDiffusion(imageData, prompt, strength, res);
+
+      // TODO: Re-enable ControlNet preprocessing once we confirm the preprocessor model exists
+      /*
       console.log('Debug - Starting ControlNet preprocessing for:', controlNetType);
+      
+      // Step 1: Preprocess the image to create control map
+      const preprocessorResponse = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          version: "fofr/controlnet-preprocessors",
+          input: {
+            image: imageData,
+            preprocessor: controlNetType === 'openpose' ? 'openpose' : 
+                         controlNetType === 'canny' ? 'canny' : 'depth_midas'
+          }
+        })
+      });
+      // ... rest of ControlNet code
+      */
       
       // Step 1: Preprocess the image to create control map
       const preprocessorResponse = await fetch('https://api.replicate.com/v1/predictions', {
@@ -41,6 +66,77 @@ export default async function handler(req, res) {
 
       const preprocessorPrediction = await preprocessorResponse.json();
       console.log('Debug - Preprocessor prediction created:', preprocessorPrediction.id);
+
+      // Poll for preprocessing completion
+      let preprocessorResult = preprocessorPrediction;
+      let pollCount = 0;
+      const maxPolls = 20; // 100 seconds max for preprocessing
+
+      while (preprocessorResult.status !== 'succeeded' && preprocessorResult.status !== 'failed' && pollCount < maxPolls) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${preprocessorResult.id}`, {
+          headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
+        });
+        
+        preprocessorResult = await pollResponse.json();
+        pollCount++;
+      }
+
+      if (preprocessorResult.status !== 'succeeded') {
+        console.log('Debug - Preprocessing failed, falling back to regular SD');
+        return await handleRegularStableDiffusion(imageData, prompt, strength, res);
+      }
+
+      const controlImageUrl = Array.isArray(preprocessorResult.output) ? 
+                              preprocessorResult.output[0] : preprocessorResult.output;
+      
+      console.log('Debug - Control image generated:', controlImageUrl ? 'success' : 'failed');
+
+      // Step 2: Use ControlNet with both original image and control map
+      let modelVersion;
+      switch (controlNetType) {
+        case 'openpose':
+          modelVersion = "jagilley/controlnet-pose:0304f7f774ba7341ef754231f794b1ba3d129e3c46af3022241325ae0c50fb99";
+          break;
+        case 'canny':
+          modelVersion = "jagilley/controlnet-canny:aff48af9c68d162388d230a2ab003f68d2638d88307bdaf1c2f1ac95079c9613";
+          break;
+        case 'depth':
+          modelVersion = "jagilley/controlnet-depth2img:922c7bb67b87ec32cbc2fd11b1d5f94f0ba4f5519c4dbd02856376444127cc60";
+          break;
+        default:
+          modelVersion = "jagilley/controlnet-pose:0304f7f774ba7341ef754231f794b1ba3d129e3c46af3022241325ae0c50fb99";
+      }
+
+      const controlNetInput = {
+        image: imageData,
+        control_image: controlImageUrl,
+        prompt: prompt,
+        negative_prompt: "(blurry:1.4), (out of focus:1.3), (soft focus:1.3), (low resolution:1.2), (pixelated:1.2), (low quality:1.3), (worst quality:1.4), (bad quality:1.2), (jpeg artifacts:1.2), (compression artifacts:1.2), (grainy:1.1), (noise:1.1), score_6, score_5, score_4, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
+        num_inference_steps: 30,
+        guidance_scale: 4,
+        strength: parseFloat(controlNetStrength) // Use ControlNet strength for structure control
+      };
+
+      console.log('Debug - Starting ControlNet generation with model:', modelVersion);
+
+      const controlNetResponse = await fetch('https://api.replicate.com/v1/predictions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ version: modelVersion, input: controlNetInput })
+      });
+
+      if (!controlNetResponse.ok) {
+        const controlNetError = await controlNetResponse.text();
+        console.log('Debug - ControlNet API error:', controlNetError);
+        return await handleRegularStableDiffusion(imageData, prompt, strength, res);
+      }
+
+      return res.json(await controlNetResponse.json());
 
       // Poll for preprocessing completion
       let preprocessorResult = preprocessorPrediction;
