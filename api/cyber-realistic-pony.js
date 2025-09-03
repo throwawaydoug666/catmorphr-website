@@ -41,72 +41,9 @@ export default async function handler(req, res) {
     console.log('Parameters - img2img strength:', strength, 'controlnet strength:', controlNetStrength);
 
     if (useControlNet) {
-      // STEP 1: Preprocess the image to create control map
-      console.log('Step 1: Preprocessing image with', controlNetType);
+      // Use jagilley ControlNet models directly (they do their own preprocessing)
+      console.log('Using jagilley ControlNet model with', controlNetType);
       
-      const preprocessorResponse = await fetch('https://api.replicate.com/v1/predictions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          version: "f6584ef76cf07a2014ffe1e9bdb1a5cfa714f031883ab43f8d4b05506625988e", // fofr/controlnet-preprocessors
-          input: {
-            image: imageData,
-            preprocessor: controlNetType === 'openpose' ? 'openpose' : 
-                         controlNetType === 'canny' ? 'canny' : 'depth_midas'
-          }
-        })
-      });
-
-      if (!preprocessorResponse.ok) {
-        const errorText = await preprocessorResponse.text();
-        throw new Error(`Preprocessor API failed: ${preprocessorResponse.status} - ${errorText}`);
-      }
-
-      const preprocessorPrediction = await preprocessorResponse.json();
-      console.log('Preprocessor prediction created:', preprocessorPrediction.id);
-
-      // Poll for preprocessing completion
-      let preprocessorResult = preprocessorPrediction;
-      let pollCount = 0;
-      const maxPolls = 30; // 150 seconds max for preprocessing
-
-      while (preprocessorResult.status !== 'succeeded' && preprocessorResult.status !== 'failed' && pollCount < maxPolls) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        
-        const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${preprocessorResult.id}`, {
-          headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` }
-        });
-        
-        if (!pollResponse.ok) {
-          throw new Error(`Failed to poll preprocessor: ${pollResponse.status}`);
-        }
-        
-        preprocessorResult = await pollResponse.json();
-        pollCount++;
-        console.log(`Preprocessing poll ${pollCount}: ${preprocessorResult.status}`);
-      }
-
-      if (preprocessorResult.status === 'failed') {
-        throw new Error(`Preprocessing failed: ${preprocessorResult.error || 'Unknown preprocessing error'}`);
-      }
-
-      if (preprocessorResult.status !== 'succeeded') {
-        throw new Error(`Preprocessing timed out after ${maxPolls * 5} seconds`);
-      }
-
-      const controlImageUrl = Array.isArray(preprocessorResult.output) ? 
-                              preprocessorResult.output[0] : preprocessorResult.output;
-      
-      if (!controlImageUrl) {
-        throw new Error('No control image generated from preprocessor');
-      }
-
-      console.log('Step 2: Starting ControlNet generation');
-
-      // STEP 2: Use ControlNet with control map
       let controlNetModel;
       switch (controlNetType) {
         case 'openpose':
@@ -123,17 +60,21 @@ export default async function handler(req, res) {
       }
 
       const controlNetInput = {
-        image: imageData,
-        control_image: controlImageUrl,
+        image: imageData,  // Original image (jagilley models do their own preprocessing)
         prompt: prompt,
         negative_prompt: negativePrompt || "score_6, score_5, score_4, (worst quality:1.2), (low quality:1.2), (normal quality:1.2), lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
         num_inference_steps: 20,
         guidance_scale: 4,
         strength: parseFloat(strength), // img2img denoising strength
-        controlnet_conditioning_scale: parseFloat(controlNetStrength) // ControlNet influence
+        scale: parseFloat(controlNetStrength) // ControlNet influence (jagilley uses 'scale' not 'controlnet_conditioning_scale')
       };
 
       console.log('Using ControlNet model:', controlNetModel);
+      console.log('Input parameters:', {
+        strength: controlNetInput.strength,
+        scale: controlNetInput.scale,
+        steps: controlNetInput.num_inference_steps
+      });
 
       const controlNetResponse = await fetch('https://api.replicate.com/v1/predictions', {
         method: 'POST',
