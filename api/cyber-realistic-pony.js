@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { imageData, prompt, predictionId, strength = 0.4 } = req.body;
+  const { imageData, prompt, negativePrompt, predictionId, strength = 0.4 } = req.body;
 
   try {
     // Check if we're polling for a result
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     const input = {
       image: imageData,
       prompt: prompt,
-      negative_prompt: "score_6, score_5, score_4, (worst quality:1.2), (low quality:1.2), (normal quality:1.2), lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
+      negative_prompt: negativePrompt || "score_6, score_5, score_4, (worst quality:1.2), (low quality:1.2), (normal quality:1.2), lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs",
       num_inference_steps: 20,
       guidance_scale: 4,
       strength: parseFloat(strength)
