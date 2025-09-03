@@ -51,7 +51,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          version: "39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08d", // fofr/controlnet-preprocessors
+          version: "f6584ef76cf07a2014ffe1e9bdb1a5cfa714f031883ab43f8d4b05506625988e", // fofr/controlnet-preprocessors
           input: {
             image: imageData,
             preprocessor: controlNetType === 'openpose' ? 'openpose' : 
