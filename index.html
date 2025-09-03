@@ -304,6 +304,22 @@
 
             <div class="control-group">
                 <label style="display: block; margin-bottom: 10px; color: #333;">
+                    Positive Prompt:
+                </label>
+                <textarea id="positivePrompt" rows="3" style="width: 100%; padding: 10px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px; resize: vertical;">score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic cat eyes, high quality photography, detailed, sharp focus</textarea>
+                <div class="help-text">Describe what you want to see in the generated image</div>
+            </div>
+
+            <div class="control-group">
+                <label style="display: block; margin-bottom: 10px; color: #333;">
+                    Negative Prompt:
+                </label>
+                <textarea id="negativePrompt" rows="2" style="width: 100%; padding: 10px; border: 2px solid #4ecdc4; border-radius: 8px; font-size: 14px; resize: vertical;">score_6, score_5, score_4, (worst quality:1.2), (low quality:1.2), (normal quality:1.2), lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs</textarea>
+                <div class="help-text">Describe what you want to avoid in the generated image</div>
+            </div>
+
+            <div class="control-group">
+                <label style="display: block; margin-bottom: 10px; color: #333;">
                     Image Transformation: <span class="range-display" id="strengthDisplay">0.4</span>
                 </label>
                 <input type="range" id="strength" min="0.15" max="0.75" value="0.4" step="0.05">
@@ -404,6 +420,18 @@
             document.getElementById('controlNetStrengthDisplay').textContent = controlNetStrength.value;
         }
 
+        function generateCatTransformPrompt() {
+            const positivePrompt = document.getElementById('positivePrompt')?.value || 
+                "score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic cat eyes, high quality photography, detailed, sharp focus";
+            return positivePrompt;
+        }
+
+        function getNegativePrompt() {
+            const negativePrompt = document.getElementById('negativePrompt')?.value || 
+                "score_6, score_5, score_4, (worst quality:1.2), (low quality:1.2), (normal quality:1.2), lowres, bad anatomy, bad hands, signature, watermarks, ugly, imperfect eyes, skewed eyes, unnatural face, unnatural body, error, extra limb, missing limbs";
+            return negativePrompt;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             logDebug('App loaded, setting up handlers');
             
@@ -485,10 +513,6 @@
             reader.readAsDataURL(file);
         }
 
-        function generateCatTransformPrompt() {
-            return "score_9, score_8_up, score_7_up, photorealistic, beautiful woman with cat ears, whiskers, feline features, detailed fur texture, realistic cat eyes, high quality photography, detailed, sharp focus";
-        }
-
         async function startTransformation() {
             logDebug('Starting cat transformation...');
             
@@ -515,6 +539,7 @@
                 const controlNetType = document.getElementById('controlNetType')?.value || 'openpose';
                 
                 const prompt = generateCatTransformPrompt();
+                const negativePrompt = getNegativePrompt();
                 
                 logDebug(`Using ${controlNetType} with img2img strength: ${strength}, controlnet strength: ${controlNetStrength}`);
                 logDebug('Calling transform endpoint...');
@@ -527,6 +552,7 @@
                     body: JSON.stringify({
                         imageData: userImageData,
                         prompt: prompt,
+                        negativePrompt: negativePrompt,
                         useControlNet: useControlNet,
                         controlNetType: controlNetType,
                         strength: strength,
