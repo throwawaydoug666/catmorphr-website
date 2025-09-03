@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CatMorphr</title>
+    <title>CatMorphr v7.0 - Pony Model Edition</title>
     <style>
         * {
             margin: 0;
@@ -286,10 +286,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>CatMorphr </h1>
-        <p class="subtitle">Transform anyone into a realistic cat character🦄✨</p>
+        <h1>CatMorphr v7.0 - CyberRealistic Pony</h1>
+        <p class="subtitle">Transform anyone into a realistic cat character using CyberRealistic Pony! 🦄✨</p>
 
-        <div class="debug" id="debugOutput">Debug: v7.0</div>
+        <div class="debug" id="debugOutput">Debug: v7.0 loaded with CyberRealistic Pony model support</div>
 
         <div class="status-box">
             <strong>🤖 CyberRealistic Pony API Ready!</strong><br>
@@ -304,10 +304,18 @@
 
             <div class="control-group">
                 <label style="display: block; margin-bottom: 10px; color: #333;">
-                    Transformation Amount: <span class="range-display" id="strengthDisplay">0.4</span>
+                    Image Transformation: <span class="range-display" id="strengthDisplay">0.4</span>
                 </label>
                 <input type="range" id="strength" min="0.15" max="0.75" value="0.4" step="0.05">
-                <div class="help-text">How much to change the original photo</div>
+                <div class="help-text">How much to change the original photo (img2img strength)</div>
+            </div>
+
+            <div class="control-group">
+                <label style="display: block; margin-bottom: 10px; color: #333;">
+                    Structure Control: <span class="range-display" id="controlNetStrengthDisplay">0.8</span>
+                </label>
+                <input type="range" id="controlNetStrength" min="0.3" max="1.0" value="0.8" step="0.05">
+                <div class="help-text">How strictly to follow the detected pose/structure (ControlNet strength)</div>
             </div>
             
             <div class="control-group">
@@ -391,7 +399,9 @@
 
         function updateRangeDisplays() {
             const strength = document.getElementById('strength');
+            const controlNetStrength = document.getElementById('controlNetStrength');
             document.getElementById('strengthDisplay').textContent = strength.value;
+            document.getElementById('controlNetStrengthDisplay').textContent = controlNetStrength.value;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -407,10 +417,14 @@
                 return;
             }
 
-            // Set up range slider listeners
+            // Set up range slider listeners for both sliders
             const strengthSlider = document.getElementById('strength');
+            const controlNetStrengthSlider = document.getElementById('controlNetStrength');
             if (strengthSlider) {
                 strengthSlider.addEventListener('input', updateRangeDisplays);
+            }
+            if (controlNetStrengthSlider) {
+                controlNetStrengthSlider.addEventListener('input', updateRangeDisplays);
             }
 
             updateRangeDisplays();
@@ -496,12 +510,13 @@
 
             try {
                 const strength = parseFloat(document.getElementById('strength')?.value || '0.4');
+                const controlNetStrength = parseFloat(document.getElementById('controlNetStrength')?.value || '0.8');
                 const useControlNet = document.getElementById('useControlNet')?.checked ?? true;
                 const controlNetType = document.getElementById('controlNetType')?.value || 'openpose';
                 
                 const prompt = generateCatTransformPrompt();
                 
-                logDebug(`Using ${controlNetType} with strength: ${strength}`);
+                logDebug(`Using ${controlNetType} with img2img strength: ${strength}, controlnet strength: ${controlNetStrength}`);
                 logDebug('Calling transform endpoint...');
                 
                 const response = await fetch('/api/cyber-realistic-pony', {
@@ -514,7 +529,8 @@
                         prompt: prompt,
                         useControlNet: useControlNet,
                         controlNetType: controlNetType,
-                        strength: strength
+                        strength: strength,
+                        controlNetStrength: controlNetStrength
                     })
                 });
 
@@ -524,11 +540,11 @@
                 }
 
                 const prediction = await response.json();
-                logDebug('CyberRealistic Pony prediction created: ' + prediction.id);
+                logDebug('Cat transformation prediction created: ' + prediction.id);
 
-                // Poll for completion
+                // Poll for completion with longer timeout for ControlNet
                 let pollCount = 0;
-                const maxPolls = 30; // 2.5 minutes max (faster than regular Pony)
+                const maxPolls = 60; // 5 minutes max for two-step ControlNet process
                 
                 while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && pollCount < maxPolls) {
                     logDebug(`Polling ${pollCount + 1}/${maxPolls}. Status: ${prediction.status}`);
@@ -559,7 +575,7 @@
                 }
 
                 if (prediction.status !== 'succeeded') {
-                    throw new Error('Generation timed out after 2.5 minutes');
+                    throw new Error('Generation timed out after 5 minutes');
                 }
 
                 const imageUrl = Array.isArray(prediction.output) ? prediction.output[0] : prediction.output;
